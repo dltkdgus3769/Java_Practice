@@ -1,0 +1,19 @@
+package ex_241017;
+
+
+public class Test1 {
+
+	public static void main(String[] args) {
+		int resultInt = Hello.sum(10,20);
+		
+		System.out.println(resultInt);
+		
+		
+		System.out.println("\t 공간을 띄우는 효과");
+		
+		//강제 타입 변경시, 작은 타입 => 큰 타입을 변경시 문제 안됨 자동 형변환 됨
+		//강제 타입 변경시, 큰 타입 => 작은 타입을 변경시 문제 발생
+		
+	}
+
+}
