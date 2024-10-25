@@ -19,7 +19,7 @@ public class BookArray {
 		 
 		  for(int i=0; i<book.length; i++) 
 		   System.out.print("(" + book[i].title + ", " + book[i].author + ")"); 
-		 
+		    
 		  scanner.close(); 
 	}
 

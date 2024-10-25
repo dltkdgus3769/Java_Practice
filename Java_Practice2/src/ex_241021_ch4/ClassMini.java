@@ -5,6 +5,7 @@ import java.util.Random;
 public class ClassMini {
 
 	public static void main(String[] args) {
+		
 		// TODO Auto-generated method stub
 		Food myFood = new Food();
 		myFood.name="김치볶음밥";

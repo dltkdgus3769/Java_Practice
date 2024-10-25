@@ -26,6 +26,7 @@ public class Login {
 			System.out.println("아이디 불일치! 로그인 실패!!");
 
 		}
+		scanner.close();
 	}
 
 }

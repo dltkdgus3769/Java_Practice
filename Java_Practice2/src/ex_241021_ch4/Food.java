@@ -16,12 +16,7 @@ public class Food {
 		System.out.println("이고, 가격은 "+price+"입니다.");
 	}
 	
-	 void Menu(String name, int price, String[] material) {
-
-	        this.name = name;
-	        this.price= price;
-	        this.material = material;
-	    }
+	  
 
 	public Food(String name, int price, String[] material) {
 		this.name = name;

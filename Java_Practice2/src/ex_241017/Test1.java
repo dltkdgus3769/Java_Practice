@@ -1,6 +1,5 @@
 package ex_241017;
 
-import java.util.Scanner;
 
 public class Test1 {
 
