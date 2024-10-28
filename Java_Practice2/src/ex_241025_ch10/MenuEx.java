@@ -9,6 +9,7 @@ public class MenuEx extends JFrame {
 	public MenuEx() {
 		setTitle("Menu 만들기 예제");
 		createMenu(); // 메뉴 생성, 프레임에 삽입
+		
 		setSize(250, 200);
 		setVisible(true);
 	}

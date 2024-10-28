@@ -16,7 +16,7 @@ public class CheckBoxEx extends JFrame{
 		JCheckBox apple = new JCheckBox("사과"); 
 		JCheckBox pear = new JCheckBox("배", true); 
 		JCheckBox cherry = new JCheckBox("체리"); 
-		c.add(apple); 
+		c.add(apple);  
 		c.add(pear); 
 		c.add(cherry); 
 		setSize(250,150); 
