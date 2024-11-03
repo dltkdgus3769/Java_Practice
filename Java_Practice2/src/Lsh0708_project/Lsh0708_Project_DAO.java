@@ -47,11 +47,10 @@ public class Lsh0708_Project_DAO {
 			con = DriverManager.getConnection(url, userid, passwd);
 
 			if (dept.equals("전체")) {
-				query = "SELECT " + stringBuilder + " FROM employee";
+				query = "SELECT " + stringBuilder + " FROM employee order by id ASC";
 			} else {
-				query = "SELECT " + stringBuilder + " FROM employee WHERE department=\'" + dept + "\'";
+				query = "SELECT " + stringBuilder + " FROM employee WHERE department=\'" + dept + "\' order by id ASC";
 			}
-
 			pstmt = con.prepareStatement(query);
 
 			rs = pstmt.executeQuery();
@@ -136,5 +135,42 @@ public class Lsh0708_Project_DAO {
 		} // finally
 		return result1;
 	} // insert
+	
+	
+	public int deleteUser(ArrayList<String> delUser) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		int totalDeletedCount  = 0;
+		if (delUser == null || delUser.isEmpty()) {
+	        return totalDeletedCount;
+	    }
+		try {
+			
+			con = DriverManager.getConnection(url, userid, passwd);
+			String sql = "DELETE FROM employee WHERE id = ?";
+			pstmt = con.prepareStatement(sql);
+			for (String userId : delUser) {
+	            pstmt.setString(1, userId);
+	            int deletedCount = pstmt.executeUpdate();
+	            totalDeletedCount += deletedCount; // 삭제된 개수를 누적
+	            System.out.println(userId + " 삭제 완료");
+	        }
+						
+			System.out.println(totalDeletedCount + "개의 레코드 삭제");
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (pstmt != null)
+					pstmt.close();
+				if (con != null)
+					con.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		} // finally
+		return totalDeletedCount;
+	} // delete
+	
 
 }

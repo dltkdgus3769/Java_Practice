@@ -29,6 +29,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
@@ -150,7 +151,7 @@ public class Lsh0708_projectMainClass extends JFrame {
 		// SerchButton.addActionListener(e -> searchUser());
 		addButton.addActionListener(e -> addUserWindow());
 		SerchButton.addActionListener(e -> selectedDept((String) deptCombo.getSelectedItem(), selectedOptions));
-
+		deleteButton.addActionListener(e -> deleteSelectedRows());
 		setVisible(true);
 	}
 
@@ -345,11 +346,17 @@ public class Lsh0708_projectMainClass extends JFrame {
 	}
 
 	private void selectedDept(String dept, ArrayList<String> nullRemoveList) {
+		
+		if (nullRemoveList == null) {
+	        nullRemoveList = new ArrayList<>(); // 빈 리스트로 초기화
+	    }
 		int checkedCount = (int) nullRemoveList.stream().filter(Objects::nonNull).count();
 		if (checkedCount < 1) {
 			JOptionPane.showMessageDialog(this, "하나 이상의 항목을 선택하세요..", "알림", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
+		
+		
 		ArrayList<Lsh0708_project_DTO> list = dao.select(dept, nullRemoveList);
 		if (list == null || list.isEmpty()) {
 			JOptionPane.showMessageDialog(this, "데이터가 없습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
@@ -457,13 +464,15 @@ public class Lsh0708_projectMainClass extends JFrame {
 		}
 
 		int result = dao.insertDB(userName, userDept, userBirth, userAdd, userTelNum, userSex);
+		JOptionPane.showMessageDialog(null, userName+"님을 추가했습니다.", "추가 완료", JOptionPane.INFORMATION_MESSAGE);
 		System.out.println("DAO 에서 insert 기능 추가 후 : 값반환:" + result + "개 추가됨.");
 		nameField.setText("");
-
 		birthdateField.setText("");
 		addressField.setText("");
 		phoneField.setText("");
 		maleButton.setSelected(true);
+		
+		
 
 	}
 
@@ -506,6 +515,11 @@ public class Lsh0708_projectMainClass extends JFrame {
 	            return column == 0; // 체크박스 컬럼만 편집 가능
 	        }
 	    };
+	    // 가운데 정렬
+	    CenteredTableCellRenderer centeredRenderer = new CenteredTableCellRenderer();
+	    for (int i = 1; i < model.getColumnCount(); i++) {
+	        ViewTable.getColumnModel().getColumn(i).setCellRenderer(centeredRenderer);
+	    }
 
  
 		ViewTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // 모든 열 크기를 자동으로 조정
@@ -529,10 +543,57 @@ public class Lsh0708_projectMainClass extends JFrame {
 	                rowData[j] = model.getValueAt(i, j); // 각 열의 값을 가져옴
 	            }
 	            // 선택된 행 데이터 출력
-	            System.out.println("선택된 행 " + i + ": " + Arrays.toString(rowData));
+	            System.out.print("선택된 행 데이터: ");
+	            for (Object data : rowData) {
+	                System.out.print(data + " ");
+	            }
+	            System.out.println();
 	        }
 	    }
 	}
+	
+	public class CenteredTableCellRenderer extends DefaultTableCellRenderer {
+	    public CenteredTableCellRenderer() {
+	        setHorizontalAlignment(JLabel.CENTER); // 텍스트를 가운데 정렬
+	    }
+	}
+	
+	
+	private void deleteSelectedRows() {
+	    CheckBoxTableModel model = (CheckBoxTableModel) ViewTable.getModel();
+	    ArrayList<String> idsToDelete = new ArrayList<>();
+
+	    // 선택된 행의 id 값을 추출
+	    for (int i = 0; i < model.getRowCount(); i++) {
+	        Boolean isChecked = (Boolean) model.getValueAt(i, 0); // 첫 번째 열은 체크박스
+	        if (isChecked != null && isChecked) {
+	            String id = model.getValueAt(i, 1).toString(); // 두 번째 열이 사번(id)라고 가정
+	            idsToDelete.add(id);
+	        }
+	    }
+	    
+	    
+
+	    // 선택된 데이터가 없을 경우 알림 메시지
+	    if (idsToDelete.isEmpty()) {
+	        JOptionPane.showMessageDialog(this, "삭제할 데이터를 선택하세요.", "알림", JOptionPane.INFORMATION_MESSAGE);
+	        return;
+	    }
+
+	    // 삭제 확인 다이얼로그
+	    int confirm = JOptionPane.showConfirmDialog(this, "선택한 데이터를 삭제하시겠습니까?", "삭제 확인", JOptionPane.YES_NO_OPTION);
+	    if (confirm != JOptionPane.YES_OPTION) {
+	        return;
+	    }
+
+	    // DB에서 선택된 ID에 해당하는 데이터를 삭제
+	    int deleteCount = dao.deleteUser(idsToDelete);
+
+	    // 삭제 완료 메시지 및 테이블 갱신
+	    JOptionPane.showMessageDialog(this, deleteCount + "개의 데이터가 삭제되었습니다.", "삭제 완료", JOptionPane.INFORMATION_MESSAGE);
+	    selectedDept((String) deptCombo.getSelectedItem(), nullRemoveList); // 테이블 갱신
+	}
+	
 
 	public static void main(String[] args) {
 		new Lsh0708_projectMainClass();
