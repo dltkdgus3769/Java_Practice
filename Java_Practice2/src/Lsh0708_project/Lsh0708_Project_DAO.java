@@ -107,17 +107,28 @@ public class Lsh0708_Project_DAO {
 		Connection con = null;
 		PreparedStatement pstmt = null;
 		int result1 = 0;
+		int lastId=0;
 		try {
 			con = DriverManager.getConnection(url, userid, passwd);
+			//다음 id_seq 확인
+			String sql2 = "SELECT * FROM employee order by id desc";
+			PreparedStatement stmt = con.prepareStatement(sql2);
+			ResultSet rs = stmt.executeQuery(sql2);
+			if (rs.next()) {
+	            lastId = rs.getInt(1)+1;
+	            System.out.println(lastId);
+	        }
+			
 			String sql = "INSERT INTO employee(id,name,department,birthdate,address,telNum,sex)"
-					+ "VALUES(id_seq.NEXTVAL,?,?,?,?,?,?)";
+					+ "VALUES(?,?,?,?,?,?,?)";
 			pstmt = con.prepareStatement(sql);
-			pstmt.setString(1, name);
-			pstmt.setString(2, department);
-			pstmt.setString(3, birthdate);
-			pstmt.setString(4, address);
-			pstmt.setString(5, telNum);
-			pstmt.setString(6, sex);
+			pstmt.setInt(1, lastId);
+			pstmt.setString(2, name);
+			pstmt.setString(3, department);
+			pstmt.setString(4, birthdate);
+			pstmt.setString(5, address);
+			pstmt.setString(6, telNum);
+			pstmt.setString(7, sex);
 			System.out.println(name + "," + department + "," + birthdate + "," + address + "," + telNum + "," + sex);
 			result1 = pstmt.executeUpdate();
 			System.out.println(result1 + "개의 레코드가 저장");

@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -11,7 +12,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -76,7 +76,7 @@ public class Lsh0708_projectMainClass extends JFrame {
 		setLocationRelativeTo(null); // 화면 가운데 정렬
 		// 창의 닫기를 클릭시, 정상 종료.
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+		setResizable(false);
 		MainPanel = new JPanel();
 		MainPanel.setLayout(new BoxLayout(MainPanel, BoxLayout.Y_AXIS));
 
@@ -126,8 +126,9 @@ public class Lsh0708_projectMainClass extends JFrame {
 		ResultPanel.setBorder(BorderFactory.createLineBorder(Color.BLUE));
 		ResultPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 		searchResult = new JLabel("검색 결과 수: ");
+		Font font = new Font("돋움", Font.BOLD, 20);
+		searchResult.setFont(font);
 		ResultPanel.add(searchResult);
-		ResultPanel.add(new JLabel("선택한 직원 :"));
 		ResultPanel.setPreferredSize(new Dimension(1000, 100));
 
 		UpdatePanel = new JPanel();
@@ -492,7 +493,7 @@ public class Lsh0708_projectMainClass extends JFrame {
 	
 	
 	// 테이블 생성
-	private void updateTable(Object[][] data, ArrayList<String> nullRemoveList) {
+	private void updateTable(Object[][] data, ArrayList<String> nullRemoveList)  {
 		String[] columnNames = new String[nullRemoveList.size()+1];
 		columnNames = nullRemoveList.toArray(columnNames);
 		columnNames[0]="선택";
@@ -515,6 +516,9 @@ public class Lsh0708_projectMainClass extends JFrame {
 	            return column == 0; // 체크박스 컬럼만 편집 가능
 	        }
 	    };
+	    
+	    
+	    
 	    // 가운데 정렬
 	    CenteredTableCellRenderer centeredRenderer = new CenteredTableCellRenderer();
 	    for (int i = 1; i < model.getColumnCount(); i++) {
@@ -532,25 +536,6 @@ public class Lsh0708_projectMainClass extends JFrame {
 	}
 	
 	
-	private void checkSelectedRows() {
-	    CheckBoxTableModel model = (CheckBoxTableModel) ViewTable.getModel(); // CheckBoxTableModel로 변경
-	    for (int i = 0; i < model.getRowCount(); i++) {
-	        Boolean isChecked = (Boolean) model.getValueAt(i, 0); // 체크박스 컬럼 값 가져오기
-	        if (isChecked != null && isChecked) {
-	            // 체크박스가 선택된 경우, 해당 행의 데이터 가져오기
-	            Object[] rowData = new Object[model.getColumnCount()]; // 행 데이터를 저장할 배열
-	            for (int j = 0; j < model.getColumnCount(); j++) {
-	                rowData[j] = model.getValueAt(i, j); // 각 열의 값을 가져옴
-	            }
-	            // 선택된 행 데이터 출력
-	            System.out.print("선택된 행 데이터: ");
-	            for (Object data : rowData) {
-	                System.out.print(data + " ");
-	            }
-	            System.out.println();
-	        }
-	    }
-	}
 	
 	public class CenteredTableCellRenderer extends DefaultTableCellRenderer {
 	    public CenteredTableCellRenderer() {
@@ -581,17 +566,21 @@ public class Lsh0708_projectMainClass extends JFrame {
 	    }
 
 	    // 삭제 확인 다이얼로그
-	    int confirm = JOptionPane.showConfirmDialog(this, "선택한 데이터를 삭제하시겠습니까?", "삭제 확인", JOptionPane.YES_NO_OPTION);
+	    int confirm = JOptionPane.showConfirmDialog(this,"정말 삭제하시겠습니까?","삭제 확인",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
+	    
 	    if (confirm != JOptionPane.YES_OPTION) {
 	        return;
+	    }else {
+	    	// DB에서 선택된 ID에 해당하는 데이터를 삭제
+		    int deleteCount = dao.deleteUser(idsToDelete);
+
+		    // 삭제 완료 메시지 및 테이블 갱신
+		    JOptionPane.showMessageDialog(this, deleteCount + "개의 데이터가 삭제되었습니다.", "삭제 완료", JOptionPane.INFORMATION_MESSAGE);
+	    	//selectedDept((String)deptCombo.getSelectedItem(), nullRemoveList);
 	    }
+	    
 
-	    // DB에서 선택된 ID에 해당하는 데이터를 삭제
-	    int deleteCount = dao.deleteUser(idsToDelete);
-
-	    // 삭제 완료 메시지 및 테이블 갱신
-	    JOptionPane.showMessageDialog(this, deleteCount + "개의 데이터가 삭제되었습니다.", "삭제 완료", JOptionPane.INFORMATION_MESSAGE);
-	    selectedDept((String) deptCombo.getSelectedItem(), nullRemoveList); // 테이블 갱신
+	    
 	}
 	
 
