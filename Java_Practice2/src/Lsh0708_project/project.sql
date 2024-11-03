@@ -11,7 +11,7 @@ address VARCHAR(100),
 telNum VARCHAR(30),
 sex VARCHAR(10)
 );
-insert into employee (id,name,department,birthdate,address,telNum,sex) values(1,'lsh','Research',
+insert into employee (id,name,department,birthdate,address,telNum,sex) values(id_seq,'lsh','연구소',
 '1995-07-08','Busan','010-1234-4567','Male');
 
 

@@ -7,12 +7,12 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Properties;
 
 import javax.swing.BorderFactory;
@@ -29,7 +29,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.table.TableColumnModel;
+import javax.swing.table.DefaultTableModel;
 
 import net.sourceforge.jdatepicker.impl.JDatePanelImpl;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
@@ -50,18 +50,23 @@ public class Lsh0708_projectMainClass extends JFrame {
 	private JTable ViewTable;
 	private JLabel searchResult;
 	private JTextField nameField;
-	// private JTextField departmentField;
 	private JTextField birthdateField;
 	private JTextField addressField;
 	private JTextField phoneField;
 	private ButtonGroup genderGroup;
 	private JRadioButton maleButton;
 	private JRadioButton femaleButton;
+
 	private ArrayList<JCheckBox> checkBoxList;
 	private ArrayList<String> selectedOptions;
+	private ArrayList<String> nullRemoveList;
+	
+	private ArrayList<JCheckBox> UsercheckList;
+
 	private String[] columnNames_KOR = { "사번", "이름", "부서", "생년월일", "주소", "전화번호", "성별" };
 	private String[] columnNames_ENG = { "id", "name", "department", "birthdate", "address", "telNum", "sex" };
-	private String[] deptColumn = { "전체", "연구소", "생산부", "영업부", "관리부"};
+	private String[] deptColumn = { "전체", "연구소", "생산부", "영업부", "관리부" };
+
 	public Lsh0708_projectMainClass() {
 
 		setTitle("사내 직원 검색 프로그램 V 1.0.0");
@@ -81,11 +86,10 @@ public class Lsh0708_projectMainClass extends JFrame {
 		SearchPanel.setPreferredSize(new Dimension(1000, 50));
 		deptCombo = new JComboBox<String>();
 		SearchPanel.add(deptCombo);
-		for(int i = 0;i<deptColumn.length;i++) {
+		for (int i = 0; i < deptColumn.length; i++) {
 			deptCombo.addItem(deptColumn[i]);
 		}
 
-		
 		SearchDetailPanel = new JPanel();
 		SearchDetailPanel.setBorder(BorderFactory.createLineBorder(Color.PINK));
 		SearchDetailPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
@@ -93,19 +97,19 @@ public class Lsh0708_projectMainClass extends JFrame {
 		SearchDetailPanel.add(new JLabel("검색 항목"));
 		checkBoxList = new ArrayList<>();
 		selectedOptions = new ArrayList<>();
-		
-		for (int i = 0; i < columnNames_ENG.length; i++) {
-            selectedOptions.add(columnNames_ENG[i]);
-        }
 
-		for(int i = 0; i < columnNames_KOR.length; i++ ) {
-			JCheckBox checkBox = new JCheckBox(columnNames_KOR[i],true);
-            checkBoxList.add(checkBox);
-            //selectedOptions.add(null); // 선택된 항목을 null로 초기화
-            checkBox.addItemListener(createItemListener(i));
-            checkBoxList.add(checkBox);
-            SearchDetailPanel.add(checkBox);
-            
+		for (int i = 0; i < columnNames_ENG.length; i++) {
+			selectedOptions.add(columnNames_ENG[i]);
+		}
+
+		for (int i = 0; i < columnNames_KOR.length; i++) {
+			JCheckBox checkBox = new JCheckBox(columnNames_KOR[i], true);
+			checkBoxList.add(checkBox);
+			// selectedOptions.add(null); // 선택된 항목을 null로 초기화
+			checkBox.addItemListener(createItemListener(i));
+			checkBoxList.add(checkBox);
+			SearchDetailPanel.add(checkBox);
+
 		}
 
 		JButton SerchButton = new JButton("검색");
@@ -143,23 +147,9 @@ public class Lsh0708_projectMainClass extends JFrame {
 		MainPanel.add(ResultPanel);
 		MainPanel.add(UpdatePanel);
 
-		SerchButton.addActionListener(e -> searchUser());
+		// SerchButton.addActionListener(e -> searchUser());
 		addButton.addActionListener(e -> addUserWindow());
-		deleteButton.addActionListener(e -> searchUserFinal());
-
-//		deptCombo.addActionListener(new ActionListener() {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				String selectedDepartment = (String) deptCombo.getSelectedItem();
-//				System.out.println("선택된 아이템: " + selectedDepartment);
-//				if (selectedDepartment.equals("전체")) {
-//					searchUser();
-//				} else {
-//					selectedDept(selectedDepartment); // 선택한 부서에 따른 데이터 로드
-//				}
-//
-//			}
-//		});
+		SerchButton.addActionListener(e -> selectedDept((String) deptCombo.getSelectedItem(), selectedOptions));
 
 		setVisible(true);
 	}
@@ -190,7 +180,7 @@ public class Lsh0708_projectMainClass extends JFrame {
 		newFrame.add(new JLabel("부서:"), gbc);
 		gbc.gridx = 1;
 		departmentField = new JComboBox<String>();
-		for(int i=1;i<deptColumn.length;i++) {
+		for (int i = 1; i < deptColumn.length; i++) {
 			departmentField.addItem(deptColumn[i]);
 		}
 		departmentField.setPreferredSize(new Dimension(200, 25));
@@ -261,70 +251,74 @@ public class Lsh0708_projectMainClass extends JFrame {
 		newFrame.setVisible(true); // 새 창 표시
 	}
 
+	// 체크박스 체크 여부 확인
 	private ItemListener createItemListener(int index) {
-        return e -> {
-        	String checkItemName="";
-            JCheckBox checkBox = (JCheckBox) e.getItem();
-            
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-            	switch(checkBox.getText()) {
-            	case "사번":
-            		checkItemName = "id";
-            		break;
-            	case "이름":
-            		checkItemName = "name";
-            		break;
-            	case "부서":
-            		checkItemName = "department";
-            		break;
-            	case "생년월일":
-            		checkItemName = "birthdate";
-            		break;
-            	case "주소":
-            		checkItemName = "address";
-            		break;
-            	case "전화번호":
-            		checkItemName = "telNum";
-            		break;
-            	case "성별":
-            		checkItemName = "sex";
-            		break;
-            	}
-                selectedOptions.set(index, checkItemName); // 체크된 항목 추가
-            } else {
-            	switch(checkBox.getText()) {
-            	case "사번":
-            		checkItemName = "id";
-            		break;
-            	case "이름":
-            		checkItemName = "name";
-            		break;
-            	case "부서":
-            		checkItemName = "department";
-            		break;
-            	case "생년월일":
-            		checkItemName = "birthdate";
-            		break;
-            	case "주소":
-            		checkItemName = "address";
-            		break;
-            	case "전화번호":
-            		checkItemName = "telNum";
-            		break;
-            	case "성별":
-            		checkItemName = "sex";
-            		break;	
-            	}
-                selectedOptions.set(index,null); // 해제된 항목 제거
-            }
-            // 선택된 항목 리스트 출력
-            System.out.println("현재 선택된 항목: " + selectedOptions);
-        };
-    }
+		return e -> {
+			String checkItemName = "";
+			JCheckBox checkBox = (JCheckBox) e.getItem();
 
-	
-	
-	
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				switch (checkBox.getText()) {
+				case "사번":
+					checkItemName = "id";
+					break;
+				case "이름":
+					checkItemName = "name";
+					break;
+				case "부서":
+					checkItemName = "department";
+					break;
+				case "생년월일":
+					checkItemName = "birthdate";
+					break;
+				case "주소":
+					checkItemName = "address";
+					break;
+				case "전화번호":
+					checkItemName = "telNum";
+					break;
+				case "성별":
+					checkItemName = "sex";
+					break;
+				}
+				selectedOptions.set(index, checkItemName); // 체크된 항목 추가
+			} else {
+				switch (checkBox.getText()) {
+				case "사번":
+					checkItemName = "id";
+					break;
+				case "이름":
+					checkItemName = "name";
+					break;
+				case "부서":
+					checkItemName = "department";
+					break;
+				case "생년월일":
+					checkItemName = "birthdate";
+					break;
+				case "주소":
+					checkItemName = "address";
+					break;
+				case "전화번호":
+					checkItemName = "telNum";
+					break;
+				case "성별":
+					checkItemName = "sex";
+					break;
+				}
+				selectedOptions.set(index, null); // 해제된 항목 제거
+			}
+			// 선택된 항목 리스트 출력
+			nullRemoveList = new ArrayList<String>();
+			for (String item : selectedOptions) {
+				if (item != null) {
+					nullRemoveList.add(item);
+				}
+			}
+		};
+	}
+
+	// 날짜 선택 툴
 	private void showDatePicker() {
 
 		// JDatePicker 설정
@@ -350,42 +344,98 @@ public class Lsh0708_projectMainClass extends JFrame {
 
 	}
 
-	private void selectedDept(String dept) {
-		ArrayList<Lsh0708_project_DTO> list = dao.select(dept);
+	private void selectedDept(String dept, ArrayList<String> nullRemoveList) {
+		int checkedCount = (int) nullRemoveList.stream().filter(Objects::nonNull).count();
+		if (checkedCount < 1) {
+			JOptionPane.showMessageDialog(this, "하나 이상의 항목을 선택하세요..", "알림", JOptionPane.INFORMATION_MESSAGE);
+			return;
+		}
+		ArrayList<Lsh0708_project_DTO> list = dao.select(dept, nullRemoveList);
 		if (list == null || list.isEmpty()) {
 			JOptionPane.showMessageDialog(this, "데이터가 없습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
 		searchResult.setText("검색 결과 수: " + list.size());
-		Object[][] data = new Object[list.size()][columnNames_ENG.length];
-		
+		System.out.println("검색 결과 수 :" +list.size());
+
+		// 체크된 항목 수에 맞는 배열 생성
+
+		Object[][] resultData = new Object[list.size()][checkedCount];
+
+		// 체크된 항목의 인덱스를 관리하기 위한 리스트
+		ArrayList<Integer> checkedIndices = new ArrayList<>();
+		ArrayList<String> resultList = new ArrayList<String>();
+		for (int j = 0; j < nullRemoveList.size(); j++) {
+			if (nullRemoveList.get(j) != null) {
+				checkedIndices.add(j);
+				switch (nullRemoveList.get(j)) {
+				case "id":
+					resultList.add("사번");
+					break;
+				case "name":
+					resultList.add("이름");
+					break;
+				case "department":
+					resultList.add("부서");
+					break;
+				case "birthdate":
+					resultList.add("생년월일");
+					break;
+				case "address":
+					resultList.add("주소");
+					break;
+				case "telNum":
+					resultList.add("전화번호");
+					break;
+				case "sex":
+					resultList.add("성별");
+					break;
+				default:
+					break;
+				}
+			}
+		}
+
 		for (int i = 0; i < list.size(); i++) {
 			Lsh0708_project_DTO dto = list.get(i);
 
-			int id = dto.getId();
-			String name = dto.getName();
-			String department = dto.getDepartment();
-			String birthdate = dto.getBirthdate();
-			String address = dto.getAddress();
-			String telNum = dto.getTelNum();
-			String sex = dto.getSex();
+			for (int j = 0; j < checkedIndices.size(); j++) {
+				int index = checkedIndices.get(j);
+				String column = nullRemoveList.get(index);
 
-			data[i][0] = id; // ID
-			data[i][1] = name; // Name
-			data[i][2] = department; // Department
-			data[i][3] = birthdate; // Birthdate
-			data[i][4] = address; // Address
-			data[i][5] = telNum; // TelNum
-			data[i][6] = sex; // Sex
-			System.out.println(
-					id + "," + name + "," + department + "," + birthdate + "," + address + "," + telNum + "," + sex);
+				switch (column) {
+				case "id":
+					resultData[i][j] = dto.getId();
+					break;
+				case "name":
+					resultData[i][j] = dto.getName();
+					break;
+				case "department":
+					resultData[i][j] = dto.getDepartment();
+					break;
+				case "birthdate":
+					resultData[i][j] = dto.getBirthdate();
+					break;
+				case "address":
+					resultData[i][j] = dto.getAddress();
+					break;
+				case "telNum":
+					resultData[i][j] = dto.getTelNum();
+					break;
+				case "sex":
+					resultData[i][j] = dto.getSex();
+					break;
+				default:
+					break;
+				}
+			}
 
 		}
-//		String[] array = selectedOptions.toArray(new String[0]);
-//		updateTable(data,array);
-		updateTable(data);
+
+		updateTable(resultData, resultList);
 	}
 
+	// 직원 추가
 	private void addUser() {
 		if (nameField.getText().isEmpty() || birthdateField.getText().isEmpty() || addressField.getText().isEmpty()
 				|| phoneField.getText().isEmpty()) {
@@ -416,77 +466,48 @@ public class Lsh0708_projectMainClass extends JFrame {
 		maleButton.setSelected(true);
 
 	}
-	private void searchUserFinal() {
-		ArrayList<Lsh0708_project_DTO> list = dao.select((String) deptCombo.getSelectedItem() ,selectedOptions);
-		Object[][] data = new Object[list.size()][selectedOptions.size()];
-//		for(int i =0;i<list.size();i++) {
-//			Lsh0708_project_DTO dto = list.get(i);
-//			for(int j=0;j<selectedOptions.size();j++) {
-//				System.out.println(dto);
-//			}
-//		}
-		searchResult.setText("검색 결과 수: " + list.size());
-		for (int i = 0; i < list.size(); i++) {
-			Lsh0708_project_DTO dto = list.get(i);
 
-			int id = dto.getId();
-			String name = dto.getName();
-			String department = dto.getDepartment();
-			String birthdate = dto.getBirthdate();
-			String address = dto.getAddress();
-			String telNum = dto.getTelNum();
-			String sex = dto.getSex();
+	public class CheckBoxTableModel extends DefaultTableModel {
+	    public CheckBoxTableModel(Object[][] data, Object[] columnNames) {
+	        super(data, columnNames);
+	    }
 
-			data[i][0] = id; // ID
-			data[i][1] = name; // Name
-			data[i][2] = department; // Department
-			data[i][3] = birthdate; // Birthdate
-			data[i][4] = address; // Address
-			data[i][5] = telNum; // TelNum
-			data[i][6] = sex; // Sex
-			System.out.println(
-					id + "," + name + "," + department + "," + birthdate + "," + address + "," + telNum + "," + sex);
-
-		}
-//		String[] array = selectedOptions.toArray(new String[0]);
-//		updateTable(data,array);
-		updateTable(data);
-
+	    @Override
+	    public Class<?> getColumnClass(int columnIndex) {
+	        if (columnIndex == 0) { // 첫 번째 열에 체크박스를 추가
+	            return Boolean.class; // Boolean 타입으로 설정
+	        }
+	        return super.getColumnClass(columnIndex);
+	    }
 	}
-	private void searchUser() {
-		ArrayList<Lsh0708_project_DTO> list = dao.select();
-		Object[][] data = new Object[list.size()][columnNames_ENG.length];
-		searchResult.setText("검색 결과 수: " + list.size());
-		for (int i = 0; i < list.size(); i++) {
-			Lsh0708_project_DTO dto = list.get(i);
+	
+	
+	// 테이블 생성
+	private void updateTable(Object[][] data, ArrayList<String> nullRemoveList) {
+		String[] columnNames = new String[nullRemoveList.size()+1];
+		columnNames = nullRemoveList.toArray(columnNames);
+		columnNames[0]="선택";
+		for (int i = 0; i < nullRemoveList.size(); i++) {
+	        columnNames[i + 1] = nullRemoveList.get(i);
+	    }
+		
+		// 체크박스 컬럼 추가를 위한 데이터 배열 생성
+	    Object[][] newData = new Object[data.length][nullRemoveList.size() + 1];
+	    for (int i = 0; i < data.length; i++) {
+	        newData[i][0] = false; // 체크박스 초기값을 false로 설정
+	        System.arraycopy(data[i], 0, newData[i], 1, data[i].length);
+	    }
 
-			int id = dto.getId();
-			String name = dto.getName();
-			String department = dto.getDepartment();
-			String birthdate = dto.getBirthdate();
-			String address = dto.getAddress();
-			String telNum = dto.getTelNum();
-			String sex = dto.getSex();
+	    // 체크박스 테이블 모델 생성
+	    CheckBoxTableModel model = new CheckBoxTableModel(newData, columnNames);
+	    ViewTable = new JTable(model) {
+	        @Override
+	        public boolean isCellEditable(int row, int column) {
+	            return column == 0; // 체크박스 컬럼만 편집 가능
+	        }
+	    };
 
-			data[i][0] = id; // ID
-			data[i][1] = name; // Name
-			data[i][2] = department; // Department
-			data[i][3] = birthdate; // Birthdate
-			data[i][4] = address; // Address
-			data[i][5] = telNum; // TelNum
-			data[i][6] = sex; // Sex
-			System.out.println(
-					id + "," + name + "," + department + "," + birthdate + "," + address + "," + telNum + "," + sex);
-
-		}
-//		String[] array = selectedOptions.toArray(new String[0]);
-//		updateTable(data,array);
-		updateTable(data);
-
-	}
-
-	private void updateTable(Object[][] data) {
-		ViewTable = new JTable(data, columnNames_KOR);
+ 
 		ViewTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // 모든 열 크기를 자동으로 조정
 		JScrollPane scrollPane = new JScrollPane(ViewTable);
 		ViewPanel.setLayout(new BorderLayout());
@@ -495,19 +516,25 @@ public class Lsh0708_projectMainClass extends JFrame {
 		ViewPanel.revalidate();
 		ViewPanel.repaint();
 	}
-	private void updateTable(Object[][] data, String [] checkedCol) {
-		ViewTable = new JTable(data, checkedCol);
-		ViewTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // 모든 열 크기를 자동으로 조정
-		JScrollPane scrollPane = new JScrollPane(ViewTable);
-		ViewPanel.setLayout(new BorderLayout());
-		ViewPanel.removeAll(); // 기존 컴포넌트를 제거
-		ViewPanel.add(scrollPane, BorderLayout.CENTER);
-		ViewPanel.revalidate();
-		ViewPanel.repaint();
+	
+	
+	private void checkSelectedRows() {
+	    CheckBoxTableModel model = (CheckBoxTableModel) ViewTable.getModel(); // CheckBoxTableModel로 변경
+	    for (int i = 0; i < model.getRowCount(); i++) {
+	        Boolean isChecked = (Boolean) model.getValueAt(i, 0); // 체크박스 컬럼 값 가져오기
+	        if (isChecked != null && isChecked) {
+	            // 체크박스가 선택된 경우, 해당 행의 데이터 가져오기
+	            Object[] rowData = new Object[model.getColumnCount()]; // 행 데이터를 저장할 배열
+	            for (int j = 0; j < model.getColumnCount(); j++) {
+	                rowData[j] = model.getValueAt(i, j); // 각 열의 값을 가져옴
+	            }
+	            // 선택된 행 데이터 출력
+	            System.out.println("선택된 행 " + i + ": " + Arrays.toString(rowData));
+	        }
+	    }
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		new Lsh0708_projectMainClass();
 	}
 
