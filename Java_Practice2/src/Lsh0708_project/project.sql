@@ -21,9 +21,7 @@ DELETE FROM employee WHERE id = 1;
 
 select id_seq.nextval from dual;
 select id_seq.currval from dual;
-select id_seq.currval from dual;
-select id_seq.currval from dual;
-select id_seq.currval from dual;
+
 
 drop table employee;
 

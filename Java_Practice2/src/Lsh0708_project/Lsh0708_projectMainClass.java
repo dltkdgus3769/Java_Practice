@@ -65,6 +65,7 @@ public class Lsh0708_projectMainClass extends JFrame {
 	private ArrayList<JCheckBox> checkBoxList;
 	private ArrayList<String> selectedOptions;
 	private ArrayList<String> nullRemoveList;
+	private ArrayList<String> resultList;
 
 	private String[] columnNames_KOR = { "사번", "이름", "부서", "생년월일", "주소", "전화번호", "성별" };
 	private String[] columnNames_ENG = { "id", "name", "department", "birthdate", "address", "telNum", "sex" };
@@ -489,7 +490,7 @@ public class Lsh0708_projectMainClass extends JFrame {
 
 		// 체크된 항목의 인덱스를 관리하기 위한 리스트
 		ArrayList<Integer> checkedIndices = new ArrayList<>();
-		ArrayList<String> resultList = new ArrayList<String>();
+		resultList = new ArrayList<String>();
 		for (int j = 0; j < nullRemoveList.size(); j++) {
 			if (nullRemoveList.get(j) != null) {
 				checkedIndices.add(j);
@@ -581,6 +582,7 @@ public class Lsh0708_projectMainClass extends JFrame {
 
 		int result = dao.insertDB(userName, userDept, userBirth, userAdd, userTelNum, userSex);
 		JOptionPane.showMessageDialog(null, userName + "님을 추가했습니다.", "추가 완료", JOptionPane.INFORMATION_MESSAGE);
+
 		System.out.println("사용자 " + userName + " 추가됨.");
 		nameField.setText("");
 		birthdateField.setText("");
@@ -695,17 +697,18 @@ public class Lsh0708_projectMainClass extends JFrame {
 			// DB에서 선택된 ID에 해당하는 데이터를 수정
 			int modCount = dao.modifyDB(userID, userName, userDept, userAdd, userTelNum, userSex);
 			JOptionPane.showMessageDialog(this, modCount + "개의 데이터 수정되었습니다.", "수정 완료", JOptionPane.INFORMATION_MESSAGE);
+
 		}
 	}
 
 	private void deleteSelectedRows() {
 		// 선택된 데이터가 없을 경우 알림 메시지
+		if (ViewTable == null || ViewTable.getModel() == null ) {
+	        JOptionPane.showMessageDialog(this, "검색을 먼저 진행하세요.", "알림", JOptionPane.INFORMATION_MESSAGE);
+	        return;
+	    }
 		ArrayList<String> idsToDelete = new ArrayList<>();
-		if (idsToDelete.isEmpty()) {
-			JOptionPane.showMessageDialog(this, "삭제할 데이터를 선택하세요.", "알림", JOptionPane.INFORMATION_MESSAGE);
-			return;
-		}
-		CheckBoxTableModel model = (CheckBoxTableModel) ViewTable.getModel();
+		CheckBoxTableModel model = (CheckBoxTableModel) ViewTable.getModel();	
 
 		// 선택된 행의 id 값을 추출
 		for (int i = 0; i < model.getRowCount(); i++) {
@@ -715,7 +718,10 @@ public class Lsh0708_projectMainClass extends JFrame {
 				idsToDelete.add(id);
 			}
 		}
-
+		if (idsToDelete.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "삭제할 데이터를 선택하세요.", "알림", JOptionPane.INFORMATION_MESSAGE);
+			return;
+		}
 		// 삭제 확인 다이얼로그
 		int confirm = JOptionPane.showConfirmDialog(this, "정말 삭제하시겠습니까?", "삭제 확인", JOptionPane.YES_NO_OPTION,
 				JOptionPane.QUESTION_MESSAGE);
@@ -727,13 +733,14 @@ public class Lsh0708_projectMainClass extends JFrame {
 			int deleteCount = dao.deleteUser(idsToDelete);
 			JOptionPane.showMessageDialog(this, deleteCount + "개의 데이터가 삭제되었습니다.", "삭제 완료",
 					JOptionPane.INFORMATION_MESSAGE);
+
 		}
 
 	}
 
 	// JFileChooser를 사용하여 파일을 다른 이름으로 저장하는 메서드
 	public void saveAsFile(Object[][] data) {
-		if(data==null) {
+		if (data == null) {
 			JOptionPane.showMessageDialog(null, "검색 진행 후 저장 가능합니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
@@ -757,18 +764,18 @@ public class Lsh0708_projectMainClass extends JFrame {
 			writer.write(String.join(",", header));
 			writer.newLine();
 			// CSV 데이터 작성
-            for (Object[] row : data) {
-                StringBuilder line = new StringBuilder();
-                for (Object cell : row) {
-                    line.append(cell != null ? cell.toString() : "").append(",");
-                }
-                // 마지막에 추가된 콤마 제거
-                writer.write(line.substring(0, line.length() - 1));
-                writer.newLine();
-            }
-            JOptionPane.showMessageDialog(null, "파일을 저장했습니다.", "저장 완료", JOptionPane.INFORMATION_MESSAGE);
-            System.out.println("데이터 파일 저장 성공: " + file.getAbsolutePath());
-			
+			for (Object[] row : data) {
+				StringBuilder line = new StringBuilder();
+				for (Object cell : row) {
+					line.append(cell != null ? cell.toString() : "").append(",");
+				}
+				// 마지막에 추가된 콤마 제거
+				writer.write(line.substring(0, line.length() - 1));
+				writer.newLine();
+			}
+			JOptionPane.showMessageDialog(null, "파일을 저장했습니다.", "저장 완료", JOptionPane.INFORMATION_MESSAGE);
+			System.out.println("데이터 파일 저장 성공: " + file.getAbsolutePath());
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "파일 저장 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
