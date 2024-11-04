@@ -734,7 +734,7 @@ public class Lsh0708_projectMainClass extends JFrame {
 	// JFileChooser를 사용하여 파일을 다른 이름으로 저장하는 메서드
 	public void saveAsFile(Object[][] data) {
 		if(data==null) {
-			JOptionPane.showMessageDialog(null, "검색 진행 후 저장 가능합니다.", "오류", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "검색 진행 후 저장 가능합니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
 		JFileChooser fileChooser = new JFileChooser();
@@ -756,7 +756,6 @@ public class Lsh0708_projectMainClass extends JFrame {
 			String[] header = { "ID", "Name", "Department", "Birthdate", "Address", "Telephone", "Sex" };
 			writer.write(String.join(",", header));
 			writer.newLine();
-			// CSV 데이터 작성
 			// CSV 데이터 작성
             for (Object[] row : data) {
                 StringBuilder line = new StringBuilder();
